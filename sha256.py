@@ -1,7 +1,7 @@
 import sys
 import binascii
 from utils import bit_len
-
+ 
 
 def main():
 	#correctness test of hash function
@@ -15,20 +15,63 @@ def main():
 #returns 256bit hash of the number input
 def sha256(inp=''):
 	inp = binascii.a2b_uu(inp)
+	l = bit_len(inp)
+	if l >= (1 << 64):
+		return 1
+	
 	#Padding
-	k = (inp - 448) % 512
+	k = (448 - 1 - inp) % 512
+	inp = (inp << 1) | 1
+	inp = inp << k
+	inp = (inp << 64) | (l & 0xffffffffffffffff)
+	
 	#Block decomposition
+	N = l / 512
+	block_mask = pow(2, 512) - 1
+	M = []
+	while (inp < 0):
+		block = inp & block_mask
+		M.append(block)
+		inp = inp >> 512
+	#TODO
 
 	#Hash computation
+	h1, h2, h3, h4 = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a
+	h5, h6, h7, h8 = 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+	
+	for t in range(0,N): 
+		a, b, c, d = h1, h2, h3, h4
+		e, f, g, h = h5, h6, h7, h8
+		W = block_decom(M[t])
+		for i in range(0,64):
+			temp1 = h + Sig1(e) + Ch(e, f, g) + K[i] + W[i] #TODO
+			temp0 = Sig0(a) + Maj(a, b, c)
+			h = g
+			g = f
+			f = e
+			e = d + temp1
+			d = c
+			c = b
+			b = a
+			a = temp0 + temp1
+		
+		h1 += a
+		h2 += b
+		h3 += c
+		h4 += d
+		h5 += e
+		h6 += f
+		h7 += g
+		h8 += h
 
-
-	return 0
+	return Con(Con(Con(h1, h2) ,Con(h3, h4)) ,Con(Con(h5, h6) ,Con(h7, h8)))
 
 #Basic operators for hash function
 RoR = lambda A, n: ((A & 0xffffffff) >> (n & 31) | (((A & 0xffffffff) << (32 - (n & 31))) & 0xffffffff))
 Rs = lambda A, n: (A & 0xffffffff) >> (n & 31)
 Con = lambda A, B: (A << bit_len(B)) | B
 Ch = lambda x, y, z: (x | y) ^ (~x | z)
+Maj = lambda x, y, z: (x | y) ^ (x | z) ^ (y | z)
 Sig0 = lambda x: RoR(x, 2) ^ RoR(x, 13) ^ RoR(x, 22)
 Sig1 = lambda x: RoR(x, 6) ^ RoR(x, 11) ^ RoR(x, 25)
 Del0 = lambda x: RoR(x, 7) ^ RoR(x, 18) ^ RoR(x, 3)
@@ -44,8 +87,14 @@ K = [0x428a2f98, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xa
 
 
 
-
-
+def block_decom(block512):
+	W = []
+	for i in range(0,16):
+		W.append(block512 & 0xffffffff)
+		block512 = block512 >> 32
+	for i in range(16, 64):
+		W.append(Del1(W[i-2]) + W[i-7] + Del0(W[i-15]) + W[i-16])
+	return W
 
 
 
