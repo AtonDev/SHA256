@@ -5,16 +5,28 @@ from utils import bit_len
 
 def main():
 	#correctness test of hash function
-	test()
+	#test()
 	
+	data = []
+	
+	k = 1000
+
+	for i in range(0, k*(1<<20)):
+		data.append(i & 0xff)
+
+	sha256(data)
+
 	#successful exit
 	return 0
 
 #returns 256bit hash of the number input
-def sha256(inp='0'):
+def sha256(inp = None):
 	inp_data = []
-	for c in inp:
-		inp_data.append(int(binascii.hexlify(c.encode('ascii', 'strict')), 16))
+	if isinstance(inp, str):
+		for c in inp:
+			inp_data.append(int(binascii.hexlify(c.encode('ascii', 'strict')), 16))
+	elif isinstance(inp, list):
+		inp_data = inp_data
 	l = len(inp_data) * 8
 	
 	#Padding
@@ -115,9 +127,7 @@ def block_decom(block512):
 def test():
 	assert hex(0xba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad) == sha256('abc')
 	assert hex(0xd7b553c6f09ac85d142415f857c5310f3bbbe7cdd787cce4b985acedd585266f) == sha256('just a test string')
-    
-
-
+	assert hex(0xc240224be173a8c79bfa0bbc1575608f4679a5beed6feb2785729209b39dbb89) == sha256('df;alkjfa;lnblakjfhdgalksdgnslfkvnzcmfdhbv nc zkdjnvlzjkcxvn lkjkfjvndlkf sdfv nlkdjfn lzkj nlkjdfv lkzdjfv zlkjzdnvkfd kzljcvnzlkjcvnzlkxcjvnzlxkcjvnzlxkcjvnzlxckjvnzlxkcjvnzlkxcjvnzxkcjn fncnnxc n  cncncnncnncncn mvzjxcv;klzjxc;lvkjzx;lckvjzx;lckjvz;lxckvjz;lxckvjz;lxckvjz;lkcxjvz;lxkcjvzxcvb,mznxbcv,zmxnbf ds,nmbcjxzkh bkdjhv jh jhzdf zkjd')
 
 if __name__ == '__main__':
 	exit = main()
