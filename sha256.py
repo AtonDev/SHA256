@@ -5,10 +5,9 @@ from utils import bit_len
 
 def main():
 	#correctness test of hash function
+	print('4: ', bit_len(4))
 	test()
-	bit_len(0)
-
-
+	
 	#successful exit
 	return 0
 
@@ -16,6 +15,11 @@ def main():
 def sha256(inp='0'):
 	inp = int(binascii.hexlify(inp.encode('ascii', 'strict')), 16)
 	l = bit_len(inp)
+
+	
+	
+
+	print('l: ', l)
 	if l >= (1 << 64):
 		return 1
 	
@@ -24,10 +28,10 @@ def sha256(inp='0'):
 	inp = (inp << 1) | 1
 	inp = inp << k
 	inp = (inp << 64) | (l & 0xffffffffffffffff)
-
 	
 	#Block decomposition
 	l = bit_len(inp)
+	print('L: ', l)
 	N = l // 512
 	block_mask = pow(2, 512) - 1
 	M = []
@@ -41,10 +45,13 @@ def sha256(inp='0'):
 	h1, h2, h3, h4 = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a
 	h5, h6, h7, h8 = 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 	
+	print('N: ', N)
 	for t in range(0, N): 
+		print('----------------------------------')
 		a, b, c, d = h1, h2, h3, h4
 		e, f, g, h = h5, h6, h7, h8
 		W = block_decom(M[t])
+		print(W)
 		for i in range(0,64):
 			temp1 = (h + Sig1(e) + Ch(e, f, g) + K[i] + W[i]) & 0xffffffff
 			temp0 = (Sig0(a) + Maj(a, b, c)) & 0xffffffff
@@ -72,8 +79,8 @@ def sha256(inp='0'):
 RoR = lambda A, n: ((A & 0xffffffff) >> (n & 31) | (((A & 0xffffffff) << (32 - (n & 31))) & 0xffffffff))
 Rs = lambda A, n: (A & 0xffffffff) >> (n & 31)
 Con = lambda A, B: (A << bit_len(B)) | B
-Ch = lambda x, y, z: (x | y) ^ (~x | z)
-Maj = lambda x, y, z: (x | y) ^ (x | z) ^ (y | z)
+Ch = lambda x, y, z: ((x & y) ^ (~x & z)) & 0xffffffff
+Maj = lambda x, y, z: ((x & y) ^ (x & z) ^ (y & z)) & 0xffffffff
 Sig0 = lambda x: RoR(x, 2) ^ RoR(x, 13) ^ RoR(x, 22)
 Sig1 = lambda x: RoR(x, 6) ^ RoR(x, 11) ^ RoR(x, 25)
 Del0 = lambda x: RoR(x, 7) ^ RoR(x, 18) ^ RoR(x, 3)
@@ -92,7 +99,7 @@ K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x9
 def block_decom(block512):
 	W = []
 	for i in range(0,16):
-		W.append(block512 & 0xffffffff)
+		W.insert(0, block512 & 0xffffffff)
 		block512 = block512 >> 32
 	for i in range(16, 64):
 		W.append((Del1(W[i-2]) + W[i-7] + Del0(W[i-15]) + W[i-16]) & 0xffffffff)
