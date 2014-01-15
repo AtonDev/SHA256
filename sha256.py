@@ -113,9 +113,8 @@ def block_decom(block512):
 
 
 def test():
-	print(sha256('abc'))
-	assert (0xba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad == sha256('abc'))
-	assert 0xd7b553c6f09ac85d142415f857c5310f3bbbe7cdd787cce4b985acedd585266f == sha256('just a test string')
+	assert hex(0xba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad) == sha256('abc')
+	assert hex(0xd7b553c6f09ac85d142415f857c5310f3bbbe7cdd787cce4b985acedd585266f) == sha256('just a test string')
     
 
 
