@@ -9,8 +9,9 @@ def main():
 	
 	data = []
 	
-	k = 1000
-
+	k = 1
+	
+	
 	for i in range(0, k*(1<<20)):
 		data.append(i & 0xff)
 
