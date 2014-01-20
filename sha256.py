@@ -11,12 +11,12 @@ def main():
 	
 	k = 1
 	
-	
+
 	for i in range(0, k*(1<<20)):
 		data.append(i & 0xff)
 
 	sha256(data)
-
+	#sha256('abc')
 	#successful exit
 	return 0
 
@@ -59,9 +59,15 @@ def sha256(inp = None):
 
 		W = block_decom(M[t])
 		for i in range(0,64):
-
+			
 			temp1 = (h + Sig1(e) + Ch(e, f, g) + K[i] + W[i]) & 0xffffffff
 			temp0 = (Sig0(a) + Maj(a, b, c)) & 0xffffffff
+			#print('temp1: ' + str(hex(temp1)))
+			#print('h: ' + str(hex(h)))
+			#print('s1: ' + str(hex(Sig1(e))))
+			#print('Ch: ' + str(hex(Ch(e, f, g))))
+			#print('K[i]: ' + str(hex(K[i])))
+			#print('W[i]: ' + str(hex(W[i])))
 			h = g
 			g = f
 			f = e
@@ -80,6 +86,7 @@ def sha256(inp = None):
 			#'\t  ' + str(hex(f)).upper()[2:] + \
 			#'\t  ' + str(hex(g)).upper()[2:] + \
 			#'\t  ' + str(hex(h)).upper()[2:])
+
 
 		h1 = (h1 + a) & 0xffffffff
 		h2 = (h2 + b) & 0xffffffff
