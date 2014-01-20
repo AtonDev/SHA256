@@ -25,7 +25,7 @@ typedef struct bigint
 
 typedef struct block
 {
-	char val[64];
+	unsigned char val[64];
 } m_block;
 
 uint K[64] = {	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 
@@ -46,14 +46,14 @@ uint K[64] = {	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 				0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2};
 
 //implicit declarations
-int256_t sha256(char input[], uint64_t size);
+int256_t sha256(unsigned char input[], uint64_t size);
 void print_H(int256_t hash);
 
 int main(int argc, char const *argv[])
 {
 	//data formation
 	uint data_size = DATA_SIZE + (-DATA_SIZE % 64);
-	char data[data_size];
+	unsigned char data[data_size];
 
 	//time elapsed
 	struct timeb start, end;
@@ -71,42 +71,51 @@ int main(int argc, char const *argv[])
     printf("\nSHA took %u milliseconds ", diff);
     printf("for data of size %d MByte\n", DATA_SIZE / 1000000);
     printf("At %.2f Mbyte/s\n", bandwidth);
-    char abc[3] = {'a', 'b', 'c'};
-    print_H(sha256(abc, 3));
-
 	return 0;
 }
 
-int256_t sha256(char data[], uint64_t size)
+int256_t sha256(unsigned char data[], uint64_t size)
 {	
+	//printf("%02x", data[0]);
+	//printf("%02x", data[1]);
+	//printf("%02x\n", data[2]);
 	int256_t H;
 	/* Padding:
 	 * append a 1, k*8 + 7 0s, and size in bits of  data on the right. */
 	uint l = (size << 3) % 512;
-	uint k = ((448 - 8 - l) % 512) >> 8;
-	data[size] = (1 << 7);
+	uint k = ((448 - 8 - l) % 512) / 8;
+	data[size] = 0x80;
 	for (int i = size + 1; i <= size + k; ++i)
 	{
-		data[i] = 0;
+		data[i] = (0 & 0xff);
 	}
 	for (int i = 0; i < 8; ++i)
 	{
-		data[size + k + 1 + i] = (size << 3) >> (i * 8);
+		data[size + k + 1 + i] = ((size << 3) >> ((7 - i) * 8)) & 0xff;
 	}
 
 	//Block decomposition
 	uint data_size = (size + (-size % 64));
 	uint N = (data_size >> 6);
 
+	//print
+	//printf("k: %d\n", k);
+	//printf("l: %08x\n", l);
+	//for (int i = 0; i < data_size; ++i)
+	//{
+	//	  printf("data[%d]", i);
+	//    printf("\t%02x\n", data[i]);
+	//}
+
 	//Hash computation
 	H.val[0] = 0x6a09e667;
-	H.val[0] = 0xbb67ae85;
-	H.val[0] = 0x3c6ef372;
-	H.val[0] = 0xa54ff53a;
-	H.val[0] = 0x510e527f;
-	H.val[0] = 0x9b05688c;
-	H.val[0] = 0x1f83d9ab;
-	H.val[0] = 0x5be0cd19;
+	H.val[1] = 0xbb67ae85;
+	H.val[2] = 0x3c6ef372;
+	H.val[3] = 0xa54ff53a;
+	H.val[4] = 0x510e527f;
+	H.val[5] = 0x9b05688c;
+	H.val[6] = 0x1f83d9ab;
+	H.val[7] = 0x5be0cd19;
 
 
 	for (int t = 0; t < N; ++t)
@@ -119,14 +128,17 @@ int256_t sha256(char data[], uint64_t size)
 		uint f = H.val[5];
 		uint g = H.val[6];
 		uint h = H.val[7];
-		uint temp0, temp1;
+		int temp0, temp1;
 
 	    // block decomposition
 	    uint W[64];
 	    for (int i = 0; i < 16; ++i)
 	    {
-	    	W[i] = (data[t * 64] << 24) + (data[t * 64 + 1] << 16) \
-	    	+ (data[t * 64 + 2] << 8) + data[t * 64 + 3];
+	    	uint index = t * 64 + i * 4;
+	    	W[i] = ((uint)data[index] << 24) | ((uint)data[index + 1] << 16) \
+	    	| ((uint)data[index + 2] << 8) | (uint)data[index + 3];
+	    	//printf("W[%d]", i);
+	    	//printf("\t%08x\n", W[i]);
 	    }
 	    for (int i = 16; i < 64; ++i)
 	    {
@@ -138,6 +150,12 @@ int256_t sha256(char data[], uint64_t size)
 	    {
 	    	temp1 = (h + S1(e) + CH(e, f, g) + K[i] + W[i]) & 0xffffffff;
 			temp0 = (S0(a) + MJ(a, b, c)) & 0xffffffff;
+			//printf("temp1: %08x\n", temp1);
+			//printf("h: %08x\n", h);
+			//printf("s1: %08x\n", S1(e));
+			//printf("Ch: %08x\n", CH(e, f, g));
+			//printf("K[i]: %08x\n", K[i]);
+			//printf("W[i]: %08x\n", W[i]);
 			h = g;
 			g = f;
 			f = e;
@@ -146,7 +164,18 @@ int256_t sha256(char data[], uint64_t size)
 			c = b;
 			b = a;
 			a = (temp0 + temp1) & 0xffffffff;
+			//printf("t = %d", i);
+			//printf("\t  %08x", a);
+			//printf("  %08x", b);
+			//printf("  %08x", c);
+			//printf("  %08x", d);
+			//printf("  %08x", e);
+			//printf("  %08x", f);
+			//printf("  %08x", g);
+			//printf("  %08x\n", h);
 	    }
+		
+
 
 	    H.val[0] = (H.val[0] + a) & 0xffffffff;
 		H.val[1] = (H.val[1] + b) & 0xffffffff;
@@ -156,7 +185,7 @@ int256_t sha256(char data[], uint64_t size)
 		H.val[5] = (H.val[5] + f) & 0xffffffff;
 		H.val[6] = (H.val[6] + g) & 0xffffffff;
 		H.val[7] = (H.val[7] + h) & 0xffffffff;
-
+		
 	}
 
 
